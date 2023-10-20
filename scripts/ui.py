@@ -174,7 +174,7 @@ def on_ui_tabs():
 
             return w2luhq.execute()
         
-        def batch_generate(video, audio_path, checkpoint, face_restore_model, no_smooth, only_mouth, resize_factor,
+        def batch_generate(video, face_swap_img, face_index, audio_path, checkpoint, face_restore_model, no_smooth, only_mouth, resize_factor,
                      mouth_mask_dilatation, erode_face_mask, mask_blur, pad_top, pad_bottom, pad_left, pad_right,
                      active_debug, code_former_weight, batch_video_variant_path=None):
             state.begin()
@@ -182,6 +182,9 @@ def on_ui_tabs():
             if (video is None and batch_video_variant_path is None) or audio_path is None:
                 print("[ERROR] Please select a video and an audio file")
                 return
+            if face_swap_img is not None:
+                face_swap = FaceSwap(video, audio, face_index, face_swap_img, resize_factor, face_restore_model, code_former_weight)
+                video = face_swap.generate()
             
             out_path = os.path.join(audio_path, "out")
             if not os.path.exists(out_path):
@@ -209,11 +212,12 @@ def on_ui_tabs():
                     counter += 1
                     print(f"processing {audio} [{counter}]")
                     
-                    w2l = W2l(video, audio, checkpoint, no_smooth, resize_factor, pad_top, pad_bottom, pad_left, pad_right)
+                    w2l = W2l(video, audio, checkpoint, no_smooth, resize_factor, pad_top, pad_bottom, pad_left,
+                      pad_right, face_swap_img)
                     w2l.execute()
 
-                    w2luhq = Wav2LipUHQ(video, face_restore_model, mouth_mask_dilatation, erode_face_mask, mask_blur, only_mouth, resize_factor, code_former_weight, active_debug)
-                    
+                    w2luhq = Wav2LipUHQ(video, face_restore_model, mouth_mask_dilatation, erode_face_mask, mask_blur,
+                                only_mouth, face_swap_img, resize_factor, code_former_weight, active_debug)
                     status = w2luhq.execute()
                     
                     
@@ -256,7 +260,7 @@ def on_ui_tabs():
         
         batch_generate_btn.click(
             batch_generate,
-            [video, batch_audio_path, checkpoint, face_restore_model, no_smooth, only_mouth, resize_factor, mouth_mask_dilatation,
+            [video, face_swap_img, face_index_slider, batch_audio_path, checkpoint, face_restore_model, no_smooth, only_mouth, resize_factor, mouth_mask_dilatation,
              erode_face_mask, mask_blur, pad_top, pad_bottom, pad_left, pad_right, active_debug, code_former_weight, batch_video_variant_path],
             [wav2lip_video, restore_video, result])
 
