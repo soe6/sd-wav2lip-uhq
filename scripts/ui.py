@@ -182,9 +182,6 @@ def on_ui_tabs():
             if (video is None and batch_video_variant_path is None) or audio_path is None:
                 print("[ERROR] Please select a video and an audio file")
                 return
-            if face_swap_img is not None:
-                face_swap = FaceSwap(video, audio, face_index, face_swap_img, resize_factor, face_restore_model, code_former_weight)
-                video = face_swap.generate()
             
             out_path = os.path.join(audio_path, "out")
             if not os.path.exists(out_path):
@@ -208,6 +205,9 @@ def on_ui_tabs():
                             return
                         
                         video = os.path.join(batch_video_variant_path, f"{variant[1]}.mp4")
+                        if face_swap_img is not None:
+                            face_swap = FaceSwap(video, audio, face_index, face_swap_img, resize_factor, face_restore_model, code_former_weight)
+                            video = face_swap.generate()
                     
                     counter += 1
                     print(f"processing {audio} [{counter}]")
